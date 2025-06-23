@@ -1,0 +1,23 @@
+# created by virtualenv automatically
+*# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+
+# Virtualenv
+.venv/
+
+# Environment
+.env
+
+# VSCode / PyCharm
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+
+# Migrations (optional)
+**/migrations/*.pyc
+**/migrations/__pycache__/
+
