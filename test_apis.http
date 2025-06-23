@@ -1,0 +1,52 @@
+### Base URL
+@base_url = http://127.0.0.1:8000
+
+#### Register a teacher
+#POST {{base_url}}/api/users/register/
+#Content-Type: application/json
+#
+#{
+#  "username": "teacher1",
+#  "password": "test1234",
+#  "role": "teacher"
+#}
+
+#### Register a student
+#POST {{base_url}}/api/users/register/
+#Content-Type: application/json
+#
+#{
+#  "username": "student1",
+#  "password": "test1234",
+#  "role": "student"
+#}
+
+#### Login as teacher1
+#POST {{base_url}}/api/users/login/
+#Content-Type: application/json
+#
+#{
+#  "username": "teacher1",
+#  "password": "test1234"
+#}
+
+#### 🏫 CREATE CLASSROOM (Teacher Only)
+#POST http://127.0.0.1:8000/api/classrooms/classrooms/
+#Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzUwNjYyMTEyLCJpYXQiOjE3NTA2NjE4MTIsImp0aSI6IjNkOTU1NWFmMDVmNzQ2ZDFiOGRkNGJmMGIwZjg2NzY0IiwidXNlcl9pZCI6MX0.FORLUQ4hUyg3XgS3F7XV5iXtYgp2MwRV0IEX3d6YAm4
+#Content-Type: application/json
+#
+#{
+#  "code": "MATH101"
+#}
+
+#### Upload PDF (Dummy)
+#POST {{base_url}}/api/classrooms/materials/
+#Authorization: Bearer <paste_access_token_here>
+#Content-Type: application/json
+#
+#{
+#  "title": "Kinematics",
+#  "file_type": "pdf",
+#  "file_url": "https://example.com/sample.pdf",
+#  "classroom": 1
+#}
