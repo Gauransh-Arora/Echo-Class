@@ -10,6 +10,7 @@ from ai_layer.embedd_and_upload import embedd_and_upload
 from ai_layer.chatbot_logic import qa_chain
 import time
 
+
 class ClassroomViewSet(viewsets.ModelViewSet):
     queryset = Classroom.objects.all()
     serializer_class = ClassroomSerializer
@@ -74,3 +75,4 @@ class ChatbotView(APIView):
             return Response({"response": response})
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+
