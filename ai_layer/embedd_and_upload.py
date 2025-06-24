@@ -36,7 +36,7 @@ def format_chunks(record: list, last_index: int, lec_id: str):
             "_id": f"doc_{i}",
             "chunk_text": record[i - last_index - 1],
             "metadata": {
-                "lec_id": lec_id
+                "lec_id": str(lec_id)
             }
         },
         range(last_index + 1, last_index + len(record) + 1)
@@ -48,7 +48,7 @@ def embedd_and_upload(chunks:list,lec_id) -> None:
     for doc in documents:
         vector = model.encode(doc["chunk_text"]).tolist()
         vectors.append({
-            "id": doc["id"],
+            "id": doc["_id"],
             "values": vector,
             "metadata": doc["metadata"]
         })
