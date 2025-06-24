@@ -7,6 +7,8 @@ from ai_layer.extract_and_clean import extract_and_clean
 from ai_layer.chunk_and_summary import chunk_generator, summariser
 from ai_layer.flashcard_and_quiz_generator import generate_flash, generate_quiz
 from ai_layer.embedd_and_upload import embedd_and_upload
+from ai_layer.chatbot_logic import qa_chain
+import time
 
 class ClassroomViewSet(viewsets.ModelViewSet):
     queryset = Classroom.objects.all()
@@ -60,3 +62,15 @@ class SummaryView(APIView):
             "mindmap": "https://fake-link.com/mindmap.png"
         })
 
+class ChatbotView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request):
+        user_message = request.data.get("message")
+        if not user_message:
+            return Response({"error": "Message is required"}, status=400)
+        try:
+            response = qa_chain.invoke({"question": user_message})
+            time.sleep(1)
+            return Response({"response": response})
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
