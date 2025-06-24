@@ -1,5 +1,5 @@
 from pinecone import Pinecone
-from langchain_openai import OpenAIEmbeddings
+from sentence_transformers import SentenceTransformer
 import dotenv
 import os
 
@@ -9,10 +9,17 @@ PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 pc = Pinecone(api_key=PINECONE_API_KEY)
-embed = OpenAIEmbeddings(model="text-embedding-ada-002", openai_api_key=OPENAI_API_KEY)
+
+class HuggingFaceEmbedder:
+    def __init__(self, model_name='all-MiniLM-L6-v2'):
+        self.model = SentenceTransformer(model_name)
+    def embed_query(self, text):
+        return self.model.encode(text).tolist()
+
+embedder = HuggingFaceEmbedder()
 
 def search(text: str) -> list:
-    vector = embed.embed_query(text)
+    vector = embedder.embed_query(text)
 
     index = pc.Index(index_name="rag-search-engine")  
 
@@ -24,3 +31,5 @@ def search(text: str) -> list:
     )
 
     return [match['metadata'].get('lec_id') for match in results['matches']]
+
+
