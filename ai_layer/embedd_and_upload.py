@@ -1,8 +1,7 @@
 from pinecone.grpc import PineconeGRPC as Pinecone
 import os 
 from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings
-from langchain_pinecone import PineconeVectorStore
+from sentence_transformers import SentenceTransformer
 
 load_dotenv("ai_layer/keys.env")
 PINECONE_API = os.getenv("PINECONE_API_KEY")
@@ -14,8 +13,7 @@ namespace_name = "pdf-search"
 
 index = pc.Index(name=index_name)
 
-embed = OpenAIEmbeddings(api_key=OPENAI_API_KEY, model="text-embedding-3-small")
-vector_store = PineconeVectorStore(index=index, embedding=embed)
+model = SentenceTransformer('all-MiniLM-L6-v2')
 
 def get_last_index(index_name:str,namespace_name:str):
     cursor = pc.Index(index_name)
@@ -48,12 +46,11 @@ def embedd_and_upload(chunks:list,lec_id) -> None:
     documents = format_chunks(chunks,get_last_index(index_name,namespace_name),lec_id)
     vectors = []
     for doc in documents:
-        vector = embed.embed_query(doc["chunk_text"])
+        vector = model.encode(doc["chunk_text"]).tolist()
         vectors.append({
             "id": doc["id"],
             "values": vector,
             "metadata": doc["metadata"]
         })
-        
     index.upsert(vectors=vectors)
 

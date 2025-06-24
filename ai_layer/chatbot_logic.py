@@ -9,12 +9,13 @@ from langchain.chains import retrieval_qa
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
+from sentence_transformers import SentenceTransformer
 
-load_dotenv("ai_layer/keys.env")
-openai_api_key = os.getenv("OPENAI_API")
-api = os.getenv("PINECONE_API_KEY")
-GROQ_API_KEY = os.getenv("GROQ_SUMM")
-
+class HuggingFaceEmbedder:
+    def __init__(self, model_name='all-MiniLM-L6-v2'):
+        self.model = SentenceTransformer(model_name)
+    def embed_query(self, text):
+        return self.model.encode(text).tolist()
 llm = ChatGroq(
     model="llama-3.1-8b-instant",
     temperature=0,
@@ -22,17 +23,13 @@ llm = ChatGroq(
     timeout=None,
     max_retries=2,
 )
-
-embed = OpenAIEmbeddings(
-    model='text-embedding-3-small',
-    openai_api_key=openai_api_key
-)
+embedder = HuggingFaceEmbedder()
 
 from langchain_pinecone import PineconeVectorStore
 
 pinecone_vectorstore = PineconeVectorStore(
     index_name= "rag-search-engine", 
-    embedding=embed, 
+    embedding=embedder, 
     text_key="chunk_text"
 )
 
