@@ -3,6 +3,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Classroom, UploadedMaterial, ClassroomMembership
 from .serializers import ClassroomSerializer, UploadedMaterialSerializer
+from ai_layer.extract_and_clean import extract_and_clean
+from ai_layer.chunk_and_summary import chunk_generator, summariser
+from ai_layer.flashcard_and_quiz_generator import generate_flash, generate_quiz
+from ai_layer.embedd_and_upload import embedd_and_upload
 
 class ClassroomViewSet(viewsets.ModelViewSet):
     queryset = Classroom.objects.all()
@@ -16,6 +20,25 @@ class UploadedMaterialViewSet(viewsets.ModelViewSet):
     queryset = UploadedMaterial.objects.all()
     serializer_class = UploadedMaterialSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        file_path = instance.file.path
+
+        cleaned_text = extract_and_clean(file_path)
+        instance.cleaned_text = cleaned_text
+
+        chunks = chunk_generator(cleaned_text)
+        summaries = summariser(chunks)
+        summary_text = " ".join(summaries)
+        instance.summary = summary_text
+
+        instance.flashcards = generate_flash(summary_text)
+        instance.quiz = generate_quiz(summary_text)
+
+        embedd_and_upload(summaries, instance.uuid)
+
+        instance.save()
 
 class JoinClassroomView(APIView):
     def post(self, request):
@@ -36,3 +59,4 @@ class SummaryView(APIView):
             "quiz": ["Q1", "Q2"],
             "mindmap": "https://fake-link.com/mindmap.png"
         })
+

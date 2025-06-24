@@ -44,7 +44,7 @@ def format_chunks(record: list, last_index: int, lec_id: str):
         range(last_index + 1, last_index + len(record) + 1)
     ))
 
-def upload(chunks:list,lec_id) -> None:
+def embedd_and_upload(chunks:list,lec_id) -> None:
     documents = format_chunks(chunks,get_last_index(index_name,namespace_name),lec_id)
     vectors = []
     for doc in documents:
