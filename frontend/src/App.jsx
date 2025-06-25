@@ -22,8 +22,8 @@ function App() {
         
         {/* Teacher Routes */}
         <Route path="/classes" element={<ClassesPage />} />
-        <Route path="/class/:id" element={<ClassPage />} />
-        <Route path="/class/:id/upload" element={<UploadPage />} />
+        <Route path="/teacherclass/:id" element={<ClassPage />} />
+        <Route path="/teacherclass/:id/upload" element={<UploadPage />} />
 
         {/* Student Routes */}
         <Route path="/my-classes" element={<MyClassesPage />} />

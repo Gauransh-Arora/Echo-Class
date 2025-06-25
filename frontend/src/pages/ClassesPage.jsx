@@ -66,7 +66,7 @@ const ClassesPage = () => {
   };
 
   const handleCardClick = (id) => {
-    navigate(`/class/${id}`);
+    navigate(`/teacherclass/${id}`);
   };
 
   return (

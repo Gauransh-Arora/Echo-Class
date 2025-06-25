@@ -45,19 +45,19 @@ const ClassPage = () => {
           <div className="flex space-x-8 items-center mb-4">
             <button
               className="text-lg font-medium text-gray-700 hover:text-black border-b-2 border-yellow-400"
-              onClick={() => navigate(`/class/${id}/upload`)}
+              onClick={() => navigate(`/teacherclass/${id}/upload`)}
             >
               Upload
             </button>
             <button
               className="text-lg font-medium text-gray-700 hover:text-black"
-              onClick={() => navigate(`/class/${id}/students`)}
+              onClick={() => navigate(`/teacherclass/${id}/students`)}
             >
               Students
             </button>
             <button
               className="text-lg font-medium text-gray-700 hover:text-black"
-              onClick={() => navigate(`/class/${id}/grade`)}
+              onClick={() => navigate(`/teacherclass/${id}/grade`)}
             >
               Grade
             </button>
@@ -66,7 +66,7 @@ const ClassPage = () => {
           <div className="bg-white rounded-lg p-6 shadow flex flex-col items-center">
             <div className="w-full h-64 border-8 border-yellow-400 rounded-lg mb-6"></div>
 
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 mb-4">
               <div className="bg-yellow-400 text-white font-bold rounded-lg px-6 py-3">
                 Code : {classData ? classData.code : "Loading..."}
               </div>
@@ -74,6 +74,14 @@ const ClassPage = () => {
                 Announcements
               </div>
             </div>
+
+            {/* Upload PDF button */}
+            <button
+              onClick={() => navigate(`/teacherclass/${id}/upload`)}
+              className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg px-6 py-3 transition"
+            >
+              Upload PDF
+            </button>
           </div>
         </div>
       </div>
