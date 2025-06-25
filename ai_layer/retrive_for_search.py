@@ -5,8 +5,7 @@ import os
 
 dotenv.load_dotenv("ai_layer/keys.env")
 
-PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")    
 
 pc = Pinecone(api_key=PINECONE_API_KEY)
 

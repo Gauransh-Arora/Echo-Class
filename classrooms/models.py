@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 import uuid
 
 class Classroom(models.Model):
-    code = models.CharField(max_length=10, unique=True)
+    code = models.CharField(max_length=10, unique=False)
     teacher = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
