@@ -37,7 +37,7 @@ const UploadPage = () => {
 
       alert("✅ PDF uploaded successfully! The AI processing will continue in the background.");
       setFile(null);
-      navigate(`/class/${id}`);
+      navigate(`/teacherclass/${id}`);
     } catch (error) {
       console.error("Upload error:", error.response?.data || error.message);
       alert("❌ Failed to upload PDF. Please try again.");
