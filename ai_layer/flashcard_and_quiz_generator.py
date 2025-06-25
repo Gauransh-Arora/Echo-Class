@@ -3,6 +3,7 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 import os
 import dotenv
+import time
 
 dotenv.load_dotenv("ai_layer/keys.env")
 GROQ_API_KEY = os.getenv("GROQ_SUMM")
@@ -165,6 +166,28 @@ The output must be:
 Return only the JSON. No additional explanations, labels, or assistant output.
 """
 
+def retry_on_rate_limit(func, *args, max_retries=5, **kwargs):
+    for attempt in range(max_retries):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            if hasattr(e, "args") and e.args and isinstance(e.args[0], dict):
+                err = e.args[0]
+                if (
+                    isinstance(err, dict)
+                    and "error" in err
+                    and err["error"].get("code") == "rate_limit_exceeded"
+                ):
+                    import re as _re
+                    msg = err["error"].get("message", "")
+                    match = _re.search(r"in ([\d.]+)s", msg)
+                    wait_time = float(match.group(1)) if match else 6
+                    print(f"Rate limit hit, waiting {wait_time} seconds...")
+                    time.sleep(wait_time)
+                    continue
+            raise
+    raise RuntimeError("Max retries exceeded for rate limit")
+
 def generate_quiz(summary : str):
 
     prompt = ChatPromptTemplate.from_messages(
@@ -181,12 +204,9 @@ def generate_quiz(summary : str):
     )
     chain = prompt | llm | StrOutputParser()
 
-          
-    AIMessage  = chain.invoke(
-        {
-            "sys_prompt": quiz_prompt,
-            "input" : summary    
-        }
+    AIMessage = retry_on_rate_limit(
+        chain.invoke,
+        {"sys_prompt": quiz_prompt, "input": summary}
     )
 
     return(AIMessage)
@@ -207,12 +227,9 @@ def generate_flash(summary : str):
     )
     chain = prompt | llm | StrOutputParser()
 
-          
-    AIMessage  = chain.invoke(
-        {
-            "sys_prompt": flashcard_prompt,
-            "input" : summary    
-        }
+    AIMessage = retry_on_rate_limit(
+        chain.invoke,
+        {"sys_prompt": flashcard_prompt, "input": summary}
     )
 
     return(AIMessage)

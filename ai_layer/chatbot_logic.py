@@ -1,4 +1,3 @@
-
 from langchain_openai import OpenAIEmbeddings
 from pinecone import Pinecone
 import os
@@ -10,6 +9,7 @@ from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from sentence_transformers import SentenceTransformer
+import time
 
 class HuggingFaceEmbedder:
     def __init__(self, model_name='all-MiniLM-L6-v2'):
@@ -62,7 +62,29 @@ qa_chain = (
     | StrOutputParser()
 )
 
-qa_chain.invoke(query)
+def retry_on_rate_limit(func, *args, max_retries=5, **kwargs):
+    for attempt in range(max_retries):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            if hasattr(e, "args") and e.args and isinstance(e.args[0], dict):
+                err = e.args[0]
+                if (
+                    isinstance(err, dict)
+                    and "error" in err
+                    and err["error"].get("code") == "rate_limit_exceeded"
+                ):
+                    import re as _re
+                    msg = err["error"].get("message", "")
+                    match = _re.search(r"in ([\d.]+)s", msg)
+                    wait_time = float(match.group(1)) if match else 6
+                    print(f"Rate limit hit, waiting {wait_time} seconds...")
+                    time.sleep(wait_time)
+                    continue
+            raise
+    raise RuntimeError("Max retries exceeded for rate limit")
+
+result = retry_on_rate_limit(qa_chain.invoke, query)
 
 
 

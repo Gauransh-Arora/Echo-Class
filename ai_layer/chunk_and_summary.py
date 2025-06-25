@@ -1,4 +1,3 @@
-
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.output_parsers import StrOutputParser
 from langchain_groq import ChatGroq
@@ -7,6 +6,7 @@ import os
 import dotenv
 import re
 import string
+import time
 
 dotenv.load_dotenv("ai_layer/keys.env")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -64,6 +64,30 @@ def clean_chunks_list(chunks: list[str]) -> list[str]:
     cleaned = [clean_chunk(c) for c in chunks]
     return [c for c in cleaned if c] 
 
+def retry_on_rate_limit(func, *args, max_retries=5, **kwargs):
+    for attempt in range(max_retries):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            # Check for Groq rate limit error
+            if hasattr(e, "args") and e.args and isinstance(e.args[0], dict):
+                err = e.args[0]
+                if (
+                    isinstance(err, dict)
+                    and "error" in err
+                    and err["error"].get("code") == "rate_limit_exceeded"
+                ):
+                    # Try to extract wait time from message, fallback to 6s
+                    import re as _re
+                    msg = err["error"].get("message", "")
+                    match = _re.search(r"in ([\d.]+)s", msg)
+                    wait_time = float(match.group(1)) if match else 6
+                    print(f"Rate limit hit, waiting {wait_time} seconds...")
+                    time.sleep(wait_time)
+                    continue
+            raise  # Not a rate limit error, re-raise
+    raise RuntimeError("Max retries exceeded for rate limit")
+
 def summariser(input_chunks : list) -> list: #need to throttle for >30 req / min
 
     summaries = []
@@ -80,7 +104,7 @@ def summariser(input_chunks : list) -> list: #need to throttle for >30 req / min
                 - Remove noise, irrelevant characters, and OCR-induced garbage (e.g., broken headers, misread symbols).
                 - Fix broken or malformed mathematical expressions using contextual clues, and format them clearly.
                 - DO NOT include any LLM-style commentary, follow-ups, soft language, or helper phrases.
-                - DO NOT say anything like “This document discusses”, “In conclusion”, or “The summary is”.
+                - DO NOT say anything like "This document discusses", "In conclusion", or "The summary is".
                 - Output only the cleaned, structured summary — as a plain string.
 
                 Return only the final refined text. No extra output, no assistant tone."""
@@ -94,13 +118,10 @@ def summariser(input_chunks : list) -> list: #need to throttle for >30 req / min
     chain = prompt | llm | StrOutputParser()
 
     for input_chunk in input_chunks:
-          
-        AIMessage  = chain.invoke(
-            {
-                "input" : input_chunk    
-            }
+        AIMessage = retry_on_rate_limit(
+            chain.invoke,
+            {"input": input_chunk}
         )
-
         summaries.append(AIMessage)
     
     return(summaries)
