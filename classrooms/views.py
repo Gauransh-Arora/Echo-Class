@@ -19,6 +19,7 @@ class ClassroomViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(teacher=self.request.user)
 
+
 class UploadedMaterialViewSet(viewsets.ModelViewSet):
     queryset = UploadedMaterial.objects.all()
     serializer_class = UploadedMaterialSerializer
@@ -43,6 +44,14 @@ class UploadedMaterialViewSet(viewsets.ModelViewSet):
 
         instance.save()
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        classroom_id = self.request.query_params.get('classroom')
+        if classroom_id:
+            queryset = queryset.filter(classroom_id=classroom_id)
+        return queryset
+
+
 class JoinClassroomView(APIView):
     def post(self, request):
         code = request.data.get("code")
@@ -55,6 +64,7 @@ class JoinClassroomView(APIView):
         except Classroom.DoesNotExist:
             return Response({"error": "Invalid code"}, status=400)
 
+
 class SummaryView(APIView):
     def get(self, request, pk):
         return Response({
@@ -63,8 +73,10 @@ class SummaryView(APIView):
             "mindmap": "https://fake-link.com/mindmap.png"
         })
 
+
 class ChatbotView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+
     def post(self, request):
         user_message = request.data.get("message")
         if not user_message:
@@ -75,4 +87,3 @@ class ChatbotView(APIView):
             return Response({"response": response})
         except Exception as e:
             return Response({"error": str(e)}, status=500)
-
