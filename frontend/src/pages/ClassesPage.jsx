@@ -5,6 +5,7 @@ import Sidebar from "../components/Sidebar";
 import TopNavbar from "../components/TopNavbar";
 import ClassCard from "../components/ClassCard";
 
+
 const ClassesPage = () => {
   const [classes, setClasses] = useState([]);
   const [showModal, setShowModal] = useState(false);
