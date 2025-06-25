@@ -8,6 +8,7 @@ from ai_layer.chunk_and_summary import chunk_generator, summariser
 from ai_layer.flashcard_and_quiz_generator import generate_flash, generate_quiz
 from ai_layer.embedd_and_upload import embedd_and_upload
 from ai_layer.chatbot_logic import qa_chain
+from classrooms.tasks import process_uploaded_material
 import time
 
 
@@ -17,6 +18,7 @@ class ClassroomViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
+        
         serializer.save(teacher=self.request.user)
 
 
@@ -27,22 +29,10 @@ class UploadedMaterialViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         instance = serializer.save()
-        file_path = instance.file.path
-
-        cleaned_text = extract_and_clean(file_path)
-        instance.cleaned_text = cleaned_text
-
-        chunks = chunk_generator(cleaned_text)
-        summaries = summariser(chunks)
-        summary_text = " ".join(summaries)
-        instance.summary = summary_text
-
-        instance.flashcards = generate_flash(summary_text)
-        instance.quiz = generate_quiz(summary_text)
-
-        embedd_and_upload(summaries, instance.uuid)
-
-        instance.save()
+        print(f"Processing material {instance.id}")  # Debug print
+        process_uploaded_material(instance.id)
+        print(f"Material {instance.id} processed")  # Debug print
+        return Response({"message": "File uploaded. Processing in background."}, status=201)
 
     def get_queryset(self):
         queryset = super().get_queryset()
