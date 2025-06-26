@@ -1,3 +1,4 @@
+from langchain_openai import OpenAIEmbeddings
 from pinecone import Pinecone
 import os
 from dotenv import load_dotenv
@@ -15,7 +16,6 @@ class HuggingFaceEmbedder:
         self.model = SentenceTransformer(model_name)
     def embed_query(self, text):
         return self.model.encode(text).tolist()
-
 llm = ChatGroq(
     model="llama-3.1-8b-instant",
     temperature=0,
