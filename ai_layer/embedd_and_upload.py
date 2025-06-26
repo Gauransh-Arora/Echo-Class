@@ -48,7 +48,6 @@ def retry_on_rate_limit(func, *args, max_retries=5, **kwargs):
         try:
             return func(*args, **kwargs)
         except Exception as e:
-            # Pinecone may have its own rate limit error structure, but for consistency, check for a similar pattern
             if hasattr(e, "args") and e.args and isinstance(e.args[0], dict):
                 err = e.args[0]
                 if (
