@@ -84,7 +84,7 @@ export default function LoginPage() {
             className={cn(
               "w-full rounded-md border p-2 text-sm font-medium",
               role === "teacher"
-                ? "bg-gradient-to-b from--500 to-blue-700 text-white shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset]"
+                ? "bg-gradient-to-b from-green-500 to-blue-700 text-white shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset]"
                 : "bg-gray-100 text-black dark:bg-zinc-800 dark:text-neutral-300"
             )}
           >
