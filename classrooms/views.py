@@ -18,8 +18,9 @@ class ClassroomViewSet(viewsets.ModelViewSet):
     serializer_class = ClassroomSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+            pass
     def perform_create(self, serializer):
-        
         serializer.save(teacher=self.request.user)
     
 class StudentClassroomView(APIView):

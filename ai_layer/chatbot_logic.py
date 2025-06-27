@@ -1,91 +1,134 @@
-from langchain_openai import OpenAIEmbeddings
-from pinecone import Pinecone
 import os
+import time
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
-from langchain.chains.conversation.memory import ConversationBufferWindowMemory
-from langchain.chains import retrieval_qa   
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
-from sentence_transformers import SentenceTransformer
-import time
+from pinecone import Pinecone
+from langgraph.graph import StateGraph
+from langgraph.graph.message import add_messages
+from langgraph.checkpoint.memory import MemorySaver
+from typing_extensions import TypedDict, Annotated
+from typing import TypedDict, Annotated
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+from langchain.prompts import PromptTemplate
+from langchain_groq import ChatGroq
 
-class HuggingFaceEmbedder:
-    def __init__(self, model_name='all-MiniLM-L6-v2'):
-        self.model = SentenceTransformer(model_name)
-    def embed_query(self, text):
-        return self.model.encode(text).tolist()
+load_dotenv("ai_layer/keys.env")
+
 llm = ChatGroq(
     model="llama-3.1-8b-instant",
     temperature=0,
     max_tokens=None,
-    timeout=None,
-    max_retries=2,
-)
-embedder = HuggingFaceEmbedder()
-
-from langchain_pinecone import PineconeVectorStore
-
-pinecone_vectorstore = PineconeVectorStore(
-    index_name= "rag-search-engine", 
-    embedding=embedder, 
-    text_key="chunk_text"
+    timeout=None
 )
 
-query = "test-query"
+pc = Pinecone()
 
-documents = pinecone_vectorstore.similarity_search(
-    query=query,
-    k=3  
-)
+model_name = "sentence-transformers/all-mpnet-base-v2"
+model_kwargs = {'device': 'cpu'}
+embeddings = HuggingFaceEmbeddings(model_name=model_name, model_kwargs=model_kwargs)
 
+index = pc.Index("rag-search-engine")
 
-template=(
-  "You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise."
-  "Question: {question}"
-  "Context: {context}"
-  "Answer:"
-)
-prompt = PromptTemplate(input_variables=["question", "context"], template=template)
+# Custom retriever
 
-def format_docs(docs):
-    return "\n\n".join(doc.page_content for doc in docs)
+def search_for_data(text: str):
+    xq = embeddings.embed_query(text)
+    res = index.query(vector=xq, top_k=3, include_metadata=True, namespace="pdf-search")
+    return [
+        {"chunk_text": match["metadata"]["chunk_text"], "score": match["score"]}
+        for match in res["matches"]
+    ]
 
-qa_chain = (
-    {
-      "context": pinecone_vectorstore.as_retriever() | format_docs,
-      "question": RunnablePassthrough(),
-    }
-    | prompt
-    | llm
-    | StrOutputParser()
-)
+def format_context(chunks):
+    return "\n\n".join(chunk["chunk_text"] for chunk in chunks)
 
-def retry_on_rate_limit(func, *args, max_retries=5, **kwargs):
-    for attempt in range(max_retries):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            if hasattr(e, "args") and e.args and isinstance(e.args[0], dict):
-                err = e.args[0]
-                if (
-                    isinstance(err, dict)
-                    and "error" in err
-                    and err["error"].get("code") == "rate_limit_exceeded"
-                ):
-                    import re as _re
-                    msg = err["error"].get("message", "")
-                    match = _re.search(r"in ([\d.]+)s", msg)
-                    wait_time = float(match.group(1)) if match else 6
-                    print(f"Rate limit hit, waiting {wait_time} seconds...")
-                    time.sleep(wait_time)
-                    continue
-            raise
-    raise RuntimeError("Max retries exceeded for rate limit")
+def format_history(messages):
+    lines = []
+    for msg in messages:
+        # Support both dict and LangChain message objects
+        if isinstance(msg, dict):
+            role = msg.get("role")
+            content = msg.get("content")
+        else:
+            # For HumanMessage, AIMessage, etc.
+            role = getattr(msg, "role", None) or getattr(msg, "type", None)
+            content = getattr(msg, "content", None)
+        if role == "user":
+            lines.append(f"User: {content}")
+        elif role == "assistant":
+            lines.append(f"Assistant: {content}")
+    return "\n".join(lines)
 
-result = retry_on_rate_limit(qa_chain.invoke, query)
+template = """
+You are a factual assistant. Use only the context and previous conversation below to answer the question accurately.
 
+Previous conversation:
+{history}
 
+Context:
+{context}
 
+Question:
+{question}
 
+Answer:
+"""
+
+prompt = PromptTemplate(input_variables=["history", "question", "context"], template=template)
+
+def chatbot_node(state):
+    messages = state["messages"]
+    # Get the latest user message
+    user_message = ""
+    for m in reversed(messages):
+        if (isinstance(m, dict) and m.get("role") == "user") or (hasattr(m, "role") and getattr(m, "role", None) == "user"):
+            user_message = m["content"] if isinstance(m, dict) else getattr(m, "content", "")
+            break
+    # Retrieve context
+    chunks = search_for_data(user_message)
+    context = format_context(chunks)
+    history_text = format_history(messages[:-1])  # Exclude current user message
+    prompt_text = prompt.format(history=history_text, question=user_message, context=context)
+    answer = llm.invoke(prompt_text)
+    # Ensure answer is a string
+    if hasattr(answer, "content"):
+        answer_text = answer.content
+    else:
+        answer_text = answer
+    # Append assistant message to state
+    new_messages = messages + [{"role": "assistant", "content": answer_text}]
+    return {"messages": new_messages}
+
+class State(TypedDict):
+    messages: Annotated[list, add_messages]
+
+graph_builder = StateGraph(State)
+graph_builder.add_node("chatbot", chatbot_node)
+graph_builder.set_entry_point("chatbot")
+memory = MemorySaver()
+graph = graph_builder.compile(checkpointer=memory)
+
+if __name__ == "__main__":
+    print("Type 'quit' to exit.")
+    thread_id = "1"
+    state = {"messages": []}
+    while True:
+        user_input = input("User: ")
+        if user_input.lower() in ["quit", "exit", "q"]:
+            print("Goodbye!")
+            break
+        # Add user message
+        state["messages"].append({"role": "user", "content": user_input})
+        # Run through LangGraph
+        result = graph.invoke(state, {"configurable": {"thread_id": thread_id}})
+        # Get assistant's latest message
+        last_msg = result["messages"][-1]
+        if isinstance(last_msg, dict):
+            assistant_msg = last_msg["content"]
+        else:
+            assistant_msg = getattr(last_msg, "content", str(last_msg))
+        print(f"Assistant: {assistant_msg}")
+        # Update state for next turn
+        state = result
