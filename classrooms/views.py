@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import Classroom, UploadedMaterial, ClassroomMembership
 from .serializers import ClassroomSerializer, UploadedMaterialSerializer
@@ -11,6 +12,8 @@ from ai_layer.embedd_and_upload import embedd_and_upload
 from ai_layer.chatbot_logic import qa_chain
 from classrooms.tasks import process_uploaded_material
 import time
+import json
+
 
 
 class ClassroomViewSet(viewsets.ModelViewSet):
@@ -86,5 +89,38 @@ class ChatbotView(APIView):
             response = qa_chain.invoke({"question": user_message})
             time.sleep(1)
             return Response({"response": response})
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+
+class GenerateQuizView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        material_id = request.data.get("material_id")
+        if not material_id:
+            return Response({"error": "material_id is required"}, status=400)
+
+        try:
+            material = UploadedMaterial.objects.get(id=material_id)
+
+            if not material.summary:
+                return Response({"error": "Summary not found for this material."}, status=404)
+
+            # Generate quiz from summary
+            quiz_json_str = generate_quiz(material.summary)
+
+            # Parse and store the quiz
+            quiz = json.loads(quiz_json_str)
+            material.quiz = quiz
+            material.save()
+
+            return Response({"quiz": quiz}, status=200)
+
+        except UploadedMaterial.DoesNotExist:
+            return Response({"error": "Material not found."}, status=404)
+        except json.JSONDecodeError:
+            return Response({"error": "Quiz generation failed: Invalid JSON returned by LLM."}, status=500)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
