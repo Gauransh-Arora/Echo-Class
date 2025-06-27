@@ -61,7 +61,7 @@ def search_for_data(text: str) -> list[str]:
 template =(
     """You are a factual assistant. Use only the context provided below to answer the question accurately.
 
-    - You can repond to greetings normally 
+    - You can respond to greetings normally 
     - Be Polite
     - If the answer cannot be found in the context, respond with: "I don't know."
     - Keep the answer clear, concise, and no more than three sentences except when asked to provide detail.
