@@ -20,7 +20,7 @@ hf = HuggingFaceEmbeddings(
 )
 
 
-def search(text: str) -> list:
+def search(text: str) -> list[str]:
     vector = hf.embed_query(text)
 
     index = pc.Index(index_name="rag-search-engine",host="https://rag-search-engine-nuu3fjt.svc.aped-4627-b74a.pinecone.io")  

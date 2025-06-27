@@ -19,18 +19,18 @@ type ClassType = {
   code: string;
 };
 
-export default function ClassesPage() {
+export default function StudentClasses() {
   const links = [
     {
       label: "Dashboard",
-      href: "/teacher-dashboard",
+      href: "/student-dashboard",
       icon: (
         <IconBrandTabler className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
     {
       label: "Classes",
-      href: "/teacher-classes",
+      href: "/student-classes",
       icon: (
         <IconClipboardText className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
@@ -70,18 +70,13 @@ export default function ClassesPage() {
 
   const refreshAccessToken = async () => {
     const refreshToken = localStorage.getItem("refresh");
-    if (!refreshToken) {
-      return false;
-    }
+    if (!refreshToken) return false;
 
     try {
       const res = await axios.post(
         "http://127.0.0.1:8000/api/users/token/refresh/",
-        {
-          refresh: refreshToken,
-        }
+        { refresh: refreshToken }
       );
-
       localStorage.setItem("access", res.data.access);
       return true;
     } catch (err) {
@@ -96,7 +91,7 @@ export default function ClassesPage() {
       if (!accessToken) throw new Error("No access token");
 
       const res = await axios.get(
-        "http://127.0.0.1:8000/api/classrooms/classrooms/",
+        "http://127.0.0.1:8000/api/classrooms/student-classrooms/",
         {
           headers: { Authorization: `Bearer ${accessToken}` },
         }
@@ -106,12 +101,9 @@ export default function ClassesPage() {
     } catch (err: any) {
       if (err.response?.status === 401) {
         const refreshed = await refreshAccessToken();
-        if (refreshed) {
-          return fetchClasses(); // retry after refresh
-        } else {
-          alert("Session expired. Please log in again.");
-          router.push("/login");
-        }
+        if (refreshed) return fetchClasses();
+        alert("Session expired. Please log in again.");
+        router.push("/login");
       } else {
         console.error("Fetch error:", err);
         alert("Failed to fetch classes.");
@@ -119,14 +111,14 @@ export default function ClassesPage() {
     }
   };
 
-  const handleAddClass = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleJoinClass = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const accessToken = localStorage.getItem("access");
       if (!accessToken) throw new Error("No access token");
 
       await axios.post(
-        "http://127.0.0.1:8000/api/classrooms/classrooms/",
+        "http://127.0.0.1:8000/api/classrooms/join/",
         { code },
         {
           headers: { Authorization: `Bearer ${accessToken}` },
@@ -139,18 +131,21 @@ export default function ClassesPage() {
     } catch (err: any) {
       if (err.response?.status === 401) {
         const refreshed = await refreshAccessToken();
-        if (refreshed) return handleAddClass(e); // retry after refresh
+        if (refreshed) return handleJoinClass(e);
         alert("Session expired. Please log in again.");
         router.push("/login");
       } else {
-        console.error("Add class error:", err.response?.data || err.message);
-        alert("Failed to add class");
+        console.error("Join class error:", err.response?.data || err.message);
+        alert(
+          err.response?.data?.error ||
+            "Failed to join class. Make sure the code is correct."
+        );
       }
     }
   };
 
   const handleCardClick = (id: number) => {
-    router.push(`/teacher-classes/${id}`);
+    router.push(`/student-classes/${id}`);
   };
 
   return (
@@ -192,9 +187,9 @@ export default function ClassesPage() {
         <div className="flex justify-end mb-6">
           <button
             onClick={() => setShowModal(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="  px-4 py-2 rounded bg-gradient-to-b from-green-500 to-blue-700 text-white shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset] "
           >
-            + Add Class
+            + Join Class
           </button>
         </div>
 
@@ -233,7 +228,7 @@ export default function ClassesPage() {
             ))
           ) : (
             <div className="text-gray-500 dark:text-gray-400">
-              No classes found
+              You have not joined any classes yet.
             </div>
           )}
         </div>
@@ -241,10 +236,10 @@ export default function ClassesPage() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 ">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-sm">
-            <h2 className="text-lg font-bold mb-4 text-gray-800">Add Class</h2>
-            <form onSubmit={handleAddClass} className="space-y-4">
+            <h2 className="text-lg font-bold mb-4 text-gray-800">Join Class</h2>
+            <form onSubmit={handleJoinClass} className="space-y-4">
               <input
                 type="text"
                 placeholder="Class Code"
@@ -265,7 +260,7 @@ export default function ClassesPage() {
                   type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
-                  Add
+                  Join
                 </button>
               </div>
             </form>
@@ -303,26 +298,10 @@ export const LogoIcon = () => (
 
 const getRandomColor = () => {
   const colors = [
-    "#FF5733", // Orange-red
-    "#33FF57", // Lime green
-    "#3357FF", // Bright blue
-    "#F1C40F", // Yellow
-    "#E74C3C", // Red
-    "#8E44AD", // Purple
-    "#3498DB", // Sky blue
-    "#2ECC71", // Green
-    "#FF33A8", // Pink
-    "#FF8C33", // Orange
-    "#1ABC9C", // Teal
-    "#9B59B6", // Light purple
-    "#34495E", // Dark blue-gray
-    "#D35400", // Burnt orange
-    "#7D3C98", // Deep purple
-    "#16A085", // Deep teal
-    "#27AE60", // Emerald green
-    "#2980B9", // Royal blue
-    "#C0392B", // Dark red
+    "#FF5733", "#33FF57", "#3357FF", "#F1C40F", "#E74C3C",
+    "#8E44AD", "#3498DB", "#2ECC71", "#FF33A8", "#FF8C33",
+    "#1ABC9C", "#9B59B6", "#34495E", "#D35400", "#7D3C98",
+    "#16A085", "#27AE60", "#2980B9", "#C0392B",
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 };
-
