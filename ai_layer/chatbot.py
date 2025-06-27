@@ -34,7 +34,7 @@ hf = HuggingFaceEmbeddings(
 )
 
 sym_spell = SymSpell(max_dictionary_edit_distance=2)
-sym_spell.load_dictionary("frequency_dictionary_en_82_765.txt", 0, 1)
+sym_spell.load_dictionary("ai_layer/frequency_dictionary_en_82_765.txt", 0, 1)
 
 def correct_query(query: str) -> str:
     suggestions = sym_spell.lookup_compound(query, max_edit_distance=2)
@@ -62,8 +62,9 @@ template =(
     """You are a factual assistant. Use only the context provided below to answer the question accurately.
 
     - You can repond to greetings normally 
+    - Be Polite
     - If the answer cannot be found in the context, respond with: "I don't know."
-    - Keep the answer clear, concise, and no more than three sentences.
+    - Keep the answer clear, concise, and no more than three sentences except when asked to provide detail.
 
     Chat History:
     {history}
@@ -82,6 +83,9 @@ prompt = PromptTemplate(input_variables=["history","question", "context"], templ
 def format_retrival(docs : list[str]):
     return "\n\n".join(doc for doc in docs)
 
+def get_contextual_query(messages: list[BaseMessage]) -> str:
+    user_msgs = [m.content for m in messages if isinstance(m, HumanMessage)]
+    return " ".join(user_msgs[-2:])  # use last 2 user messages as context
 
 def format_history(messages: list) -> str:
     return "\n".join(
@@ -92,7 +96,7 @@ def format_history(messages: list) -> str:
 def chatbot_node(state: dict) -> dict:
     messages = state["messages"]
 
-    user_msg = correct_query(next((m.content for m in reversed(messages) if isinstance(m, HumanMessage)), ""))
+    user_msg = correct_query(get_contextual_query(messages))
 
     history = format_history(messages[:-1])
 
@@ -125,42 +129,39 @@ memory = MemorySaver()
 graph = graph_builder.compile(checkpointer=memory)
 
 def pdf_chat(query: str, thread_id: str = "1"):
+    config = {"configurable": {"thread_id": thread_id}}
 
-    state = memory.get(thread_id) or {"messages": []}
+    # Always initialize a clean state with "messages" key
+    state = memory.get(config) or {}
+    if "messages" not in state:
+        state["messages"] = []
 
+    # Add the user query
     state["messages"].append(HumanMessage(content=query))
 
     max_retries = 3
-    delay = 5  
+    delay = 5
 
     for attempt in range(1, max_retries + 1):
         try:
-            result = graph.invoke(state, {"configurable": {"thread_id": thread_id}})
+            result = graph.invoke(state, config)
             assistant_msg = result["messages"][-1]
-            memory.set(thread_id, result)
             return assistant_msg.content
-
         except Exception as e:
             print(f"[Attempt {attempt}] Error: {e}")
             if attempt < max_retries:
                 print(f"Retrying in {delay} seconds...")
                 time.sleep(delay)
-                delay *=2
-
+                delay *= 2
             else:
                 return "Sorry, I'm currently facing issues and couldn't process your request. Please try again later."
+
 
 if __name__ == "__main__":
     print("Type 'quit' to exit.")
     thread_id = "1"
-    state = {"messages": []}
     while True:
         user_input = input("User: ")
         if user_input.lower() in {"quit", "exit"}:
             break
-        state["messages"].append(HumanMessage(content=user_input))
-        result = graph.invoke(state, {"configurable": {"thread_id": thread_id}})
-        assistant_msg = result["messages"][-1]
-        print(f"Assistant: {assistant_msg.content}")
-        state = result
-
+        print(pdf_chat(user_input, thread_id))
