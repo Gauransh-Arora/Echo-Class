@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from .models import Classroom, UploadedMaterial, ClassroomMembership
 from .serializers import ClassroomSerializer, UploadedMaterialSerializer
 from ai_layer.extract_and_clean import extract_and_clean
@@ -20,6 +21,15 @@ class ClassroomViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         
         serializer.save(teacher=self.request.user)
+    
+class StudentClassroomView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        memberships = ClassroomMembership.objects.filter(student=request.user)
+        classrooms = [membership.classroom for membership in memberships]
+        serializer = ClassroomSerializer(classrooms, many=True)
+        return Response(serializer.data)
 
 
 class UploadedMaterialViewSet(viewsets.ModelViewSet):
