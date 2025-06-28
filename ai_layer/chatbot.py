@@ -80,28 +80,41 @@ template =(
 
 prompt = PromptTemplate(input_variables=["history","question", "context"], template=template)
 
-def format_retrival(docs : list[str]):
-    return "\n\n".join(doc for doc in docs)
+def format_retrival(docs: list[str], max_chars: int = 1500) -> str:
+    result = []
+    total_chars = 0
+    for doc in docs:
+        if total_chars + len(doc) > max_chars:
+            break
+        result.append(doc.strip())
+        total_chars += len(doc)
+    return "\n\n".join(result)
+
 
 def get_contextual_query(messages: list[BaseMessage]) -> str:
     user_msgs = [m.content for m in messages if isinstance(m, HumanMessage)]
     return " ".join(user_msgs[-2:])  # use last 2 user messages as context
 
-def format_history(messages: list) -> str:
-    return "\n".join(
-        f"{'User' if isinstance(m, HumanMessage) else 'Assistant'}: {m.content}"
-        for m in messages
-    )
+def format_history(messages: list, max_chars: int = 4000) -> str:
+    history_lines = []
+    total_chars = 0
+    for m in reversed(messages):
+        role = "User" if isinstance(m, HumanMessage) else "Assistant"
+        line = f"{role}: {m.content.strip()}"
+        if total_chars + len(line) > max_chars:
+            break
+        history_lines.append(line)
+        total_chars += len(line)
+    return "\n".join(reversed(history_lines))
 
 def chatbot_node(state: dict) -> dict:
     messages = state["messages"]
 
     user_msg = correct_query(get_contextual_query(messages))
 
-    history = format_history(messages[:-1])
-
+    history = format_history(messages[:-1], max_chars=4000)
     docs = search_for_data(user_msg)
-    context = format_retrival(docs)
+    context = format_retrival(docs, max_chars=1500)
     
     prompt_text = prompt.format(
         question=user_msg,
