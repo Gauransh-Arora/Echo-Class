@@ -32,6 +32,7 @@ class UploadedMaterial(models.Model):
     summary = models.TextField(blank=True, null=True)
     flashcards = models.JSONField(blank=True, null=True)
     quiz = models.JSONField(blank=True, null=True)
+    mindmap = models.JSONField(blank=True, null=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
 
     class Meta:

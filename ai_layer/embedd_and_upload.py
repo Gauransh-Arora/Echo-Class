@@ -74,5 +74,3 @@ def embedd_and_upload(chunks: list, lec_id: str) -> None:
     except Exception as e:
         print(f"Error uploading to Pinecone: {str(e)}")
         raise  # Re-raise to trigger task retry
-
-print(index.describe_index_stats())
