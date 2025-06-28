@@ -165,9 +165,11 @@ export default function StudentDashboard() {
               >
                 Join Class
               </button>
-              <button className="rounded bg-purple-500 px-4 py-2 text-white hover:bg-purple-600">
-                View Timetable
-              </button>
+              <a href="\timetable.jpg" target="_blank" rel="noopener noreferrer">
+                <button className="rounded bg-purple-500 px-4 py-2 text-white hover:bg-purple-600">
+                  View Timetable
+                </button>
+              </a>
             </div>
           </div>
         </div>
