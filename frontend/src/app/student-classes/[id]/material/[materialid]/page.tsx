@@ -1,6 +1,9 @@
 "use client";
-import React, { useState } from "react";
-import { useParams } from "next/navigation";
+
+import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import axios from "axios";
+import { cn } from "@/lib/utils";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { Timeline } from "@/components/ui/timeline";
 import {
@@ -11,104 +14,182 @@ import {
   IconClipboardText,
 } from "@tabler/icons-react";
 import { motion } from "motion/react";
-import { cn } from "@/lib/utils";
 
-export default function Material() {
+type MaterialType = {
+  id: number;
+  file: string;
+  summary: string | null;
+  flashcards: string | null;
+};
+
+export default function MaterialPage() {
   const params = useParams();
-  const { materialId } = params;
+  const router = useRouter();
+  const materialId = params?.materialid; // ✅ FIXED param name
 
-  const [open, setOpen] = useState(false);
+  const [material, setMaterial] = useState<MaterialType | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!materialId) return;
+
+    const fetchMaterial = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await axios.get(
+          `http://127.0.0.1:8000/api/classrooms/materials/${materialId}/`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("access")}`,
+            },
+          }
+        );
+        setMaterial(res.data);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load material.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMaterial();
+  }, [materialId]);
+
+  const formatSummary = (text: string | null) => {
+    if (!text) return null;
+    return text
+      .split("\n")
+      .filter((line) => line.trim() !== "")
+      .map((line, idx) => (
+        <p key={idx} className="mb-2">
+          {line}
+        </p>
+      ));
+  };
 
   const links = [
     {
       label: "Dashboard",
       href: "/student-dashboard",
-      icon: <IconBrandTabler className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+      icon: (
+        <IconBrandTabler className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
     },
     {
       label: "Classes",
       href: "/student-classes",
-      icon: <IconClipboardText className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+      icon: (
+        <IconClipboardText className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
     },
     {
       label: "Profile",
       href: "#",
-      icon: <IconUserBolt className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+      icon: (
+        <IconUserBolt className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
     },
     {
       label: "Settings",
       href: "#",
-      icon: <IconSettings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+      icon: (
+        <IconSettings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
     },
     {
       label: "Logout",
       href: "#",
-      icon: <IconArrowLeft className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+      icon: (
+        <IconArrowLeft className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
     },
   ];
 
-  // 📝 Dummy summary text
-  const summaryText =
-    "This material covers the basics of Artificial Intelligence including definitions, history, and applications across various industries. It is designed to provide a foundational understanding of AI concepts and their relevance in today's technology landscape. It includes key terms, significant milestones in AI development, and examples of AI applications in real-world scenarios. The material is suitable for beginners and serves as an introduction to more advanced AI topics. It also includes flashcards for quick review and a quiz to test understanding of the material. The flashcards cover essential questions about AI, such as its definition, applications, and historical context. The quiz is designed to reinforce learning and assess comprehension of the material. This material is ideal for students looking to grasp the fundamentals of AI and its impact on various fields. It is structured to facilitate easy learning and retention of key AI concepts. It is a valuable resource for anyone interested in understanding the basics of AI and its significance in modern technology. ";
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <p className="text-lg">Loading...</p>
+      </div>
+    );
+  }
 
-  // 🧠 Dummy flashcards
-  const flashcards = [
-    { question: "What is AI?", answer: "AI is the simulation of human intelligence in machines." },
-    { question: "Name one application of AI.", answer: "Self-driving cars." },
-    { question: "When did AI research begin?", answer: "In the 1950s." },
-    { question: "What is machine learning?", answer: "A subset of AI that enables systems to learn from data." },
-    { question: "What is natural language processing?", answer: "A field of AI that focuses on the interaction between computers and human language." },
-    { question: "What is deep learning?", answer: "A type of machine learning that uses neural networks with many layers." },
-    { question: "What is reinforcement learning?", answer: "A type of machine learning where an agent learns by interacting with its environment." },
-    { question: "What is computer vision?", answer: "A field of AI that enables machines to interpret and understand visual information." },
-    { question: "What is the Turing Test?", answer: "A test to determine if a machine can exhibit intelligent behavior equivalent to, or indistinguishable from, that of a human." },
-    { question: "What is a neural network?", answer: "A computational model inspired by the way biological neural networks in the human brain process information." },
-    { question: "What is the difference between AI and machine learning?", answer: "AI is a broader concept that encompasses machine learning, which is a specific approach to achieving AI." },
-    { question: "What is supervised learning?", answer: "A type of machine learning where the model is trained on labeled data." },
-    { question: "What is unsupervised learning?", answer: "A type of machine learning where the model learns from unlabeled data." },
-    { question: "What is a chatbot?", answer: "An AI application that simulates human conversation through text or voice interactions." },
-    { question: "What is the role of data in AI?", answer: "Data is essential for training AI models and improving their accuracy." },
-    { question: "What are some ethical concerns related to AI?", answer: "Bias in algorithms, privacy issues, and job displacement." },
-  ];
+  if (error || !material) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <p className="text-lg text-red-500">{error ?? "Material not found."}</p>
+      </div>
+    );
+  }
 
   const timelineData = [
     {
       title: "Summary",
-      content: (
-        <div>
-          <p className="mb-4 text-sm text-neutral-800 dark:text-neutral-200">{summaryText}</p>
+      content: material.summary ? (
+        <div className="text-gray-800 dark:text-gray-200 leading-relaxed">
+          {formatSummary(material.summary)}
         </div>
+      ) : (
+        <p className="text-gray-500 italic">
+          Processing... Summary not available yet.
+        </p>
       ),
     },
     {
       title: "Flashcards",
-      content: (
+      content: material.flashcards ? (
         <div className="grid gap-4">
-          {flashcards.map((card, index) => (
-            <div
-              key={index}
-              className="rounded-lg bg-neutral-100 p-4 dark:bg-neutral-800"
-            >
-              <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                Q: {card.question}
-              </p>
-              <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
-                A: {card.answer}
-              </p>
-            </div>
-          ))}
+          {JSON.parse(material.flashcards).map(
+            (
+              card: { question: string; answer: string },
+              index: number
+            ) => (
+              <div
+                key={index}
+                className="rounded-lg bg-neutral-100 p-4 dark:bg-neutral-800"
+              >
+                <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                  Q: {card.question}
+                </p>
+                <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
+                  A: {card.answer}
+                </p>
+              </div>
+            )
+          )}
         </div>
+      ) : (
+        <p className="text-gray-500 italic">
+          Processing... Flashcards not available yet.
+        </p>
       ),
     },
     {
-      title: "Quiz",
+      title: "Download & Quiz",
       content: (
-        <button
-          onClick={() => alert("Quiz will start soon!")}
-          className="mt-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          Start Quiz
-        </button>
+        <div className="flex flex-col gap-4">
+          <a
+            href={material.file}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow items-center justify-center"
+          >
+            Download PDF
+          </a>
+          <button
+            onClick={() =>
+              router.push(
+                `/student-classes/${params.id}/material/${materialId}/quiz`
+              )
+            }
+            className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-4 py-2 rounded shadow"
+          >
+            Take Quiz
+          </button>
+        </div>
       ),
     },
   ];
@@ -133,7 +214,7 @@ export default function Material() {
           </div>
           <SidebarLink
             link={{
-              label: "Manu Arora",
+              label: "Student Name",
               href: "#",
               icon: (
                 <img
@@ -147,7 +228,7 @@ export default function Material() {
         </SidebarBody>
       </Sidebar>
 
-      {/* Timeline Content */}
+      {/* Timeline */}
       <main className="flex flex-1 flex-col overflow-y-auto p-6 md:p-10">
         <h1 className="mb-6 text-2xl font-bold text-neutral-800 dark:text-neutral-100">
           Material Details
