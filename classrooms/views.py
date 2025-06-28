@@ -14,6 +14,7 @@ from classrooms.tasks import process_uploaded_material
 import time
 import json
 import uuid
+from ai_layer.mindmap import generate_mindmap_from_texts
 
 
 class ClassroomViewSet(viewsets.ModelViewSet):
@@ -126,5 +127,34 @@ class GenerateQuizView(APIView):
             return Response({"error": "Material not found."}, status=404)
         except json.JSONDecodeError:
             return Response({"error": "Quiz generation failed: Invalid JSON returned by LLM."}, status=500)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class MindmapView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        summaries = request.data.get("summaries")
+        if not summaries or not isinstance(summaries, list):
+            return Response({"error": "A list of summaries is required."}, status=400)
+        try:
+            mindmap = generate_mindmap_from_texts(summaries)
+            return Response(mindmap, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class MaterialMindmapView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, material_id):
+        try:
+            material = UploadedMaterial.objects.get(id=material_id)
+            if not material.mindmap:
+                return Response({"error": "Mindmap not found for this material."}, status=404)
+            return Response({"mindmap": material.mindmap}, status=200)
+        except UploadedMaterial.DoesNotExist:
+            return Response({"error": "Material not found."}, status=404)
         except Exception as e:
             return Response({"error": str(e)}, status=500)

@@ -7,7 +7,9 @@ from .views import (
     SummaryView,
     StudentClassroomView,
     GenerateQuizView,
-    ChatbotView
+    ChatbotView,
+    MindmapView,
+    MaterialMindmapView
 )
 
 router = DefaultRouter()
@@ -20,4 +22,6 @@ urlpatterns = router.urls + [
     path('student-classrooms/', StudentClassroomView.as_view(),name="student-classroom"),
     path("generate-quiz/", GenerateQuizView.as_view(), name="generate-quiz"),
     path('chatbot/', ChatbotView.as_view(), name="chatbot"),
+    path('mindmap/', MindmapView.as_view(), name="mindmap"),
+    path('material/<int:material_id>/mindmap/', MaterialMindmapView.as_view(), name="material-mindmap"),
 ]
