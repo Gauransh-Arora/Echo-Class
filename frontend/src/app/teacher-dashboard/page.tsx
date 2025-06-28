@@ -10,9 +10,18 @@ import {
 } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation"; 
 import { label } from "motion/react-client";
 
 export default function TeacherDashboard() {
+  const [open, setOpen] = useState(true); 
+  const router = useRouter(); 
+
+  const handleLogout = () => {
+    console.log("Teacher logging out...");
+    router.push("/login"); 
+  };
+
   const links = [
     {
       label: "Dashboard",
@@ -30,14 +39,14 @@ export default function TeacherDashboard() {
     },
     {
       label: "Profile",
-      href: "#",
+      href: "/teacher-profile",
       icon: (
         <IconUserBolt className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
     {
       label: "Settings",
-      href: "#",
+      href: "/settings",
       icon: (
         <IconSettings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
@@ -46,18 +55,29 @@ export default function TeacherDashboard() {
       label: "Logout",
       href: "#",
       icon: (
-        <IconArrowLeft className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+        <IconArrowLeft
+          onClick={handleLogout} 
+          className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200 cursor-pointer"
+        />
       ),
     },
   ];
-  const [open, setOpen] = useState(false);
+
   return (
     <div
       className={cn(
         "mx-auto flex w-full  flex-1 flex-col overflow-hidden rounded-md border border-neutral-200 bg-gray-100 md:flex-row dark:border-neutral-700 dark:bg-neutral-800",
-        "h-screen" // for your use case, use `h-screen` instead of `h-[60vh]`
+        "h-screen"
       )}
     >
+      {}
+      <button
+        onClick={() => setOpen(!open)}
+        className="absolute top-4 left-4 z-50 rounded-md bg-white px-3 py-1 shadow-md md:hidden"
+      >
+        {open ? "Close" : "Menu"}
+      </button>
+
       <Sidebar open={open} setOpen={setOpen}>
         <SidebarBody className="justify-between gap-10">
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
@@ -87,11 +107,12 @@ export default function TeacherDashboard() {
           </div>
         </SidebarBody>
       </Sidebar>
+
+      {}
       <Dashboard />
     </div>
   );
 }
-
 
 export const Logo = () => {
   return (
@@ -110,6 +131,7 @@ export const Logo = () => {
     </a>
   );
 };
+
 export const LogoIcon = () => {
   return (
     <a
@@ -121,26 +143,42 @@ export const LogoIcon = () => {
   );
 };
 
-// Dummy dashboard component with content
+
 const Dashboard = () => {
+  const router = useRouter();
   return (
     <div className="flex flex-1">
-      <div className="flex h-full w-full flex-1 flex-col gap-2 rounded-tl-2xl border border-neutral-200 bg-white p-2 md:p-10 dark:border-neutral-700 dark:bg-neutral-900">
-        <div className="flex gap-2">
-          {[...new Array(4)].map((i, idx) => (
-            <div
-              key={"first-array-demo-1" + idx}
-              className="h-20 w-full animate-pulse rounded-lg bg-gray-100 dark:bg-neutral-800"
-            ></div>
-          ))}
+      <div className="flex h-full w-full flex-1 flex-col gap-4 rounded-tl-2xl border border-neutral-200 bg-white p-4 md:p-10 dark:border-neutral-700 dark:bg-neutral-900">
+        <h2 className="text-2xl font-semibold text-black dark:text-white">
+          Welcome back, Teacher!
+        </h2>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-lg bg-gradient-to-r from-orange-400 to-orange-600 p-4 text-white shadow">
+            <h3 className="text-lg">Active Classes</h3>
+            <p className="text-2xl font-bold">3</p>
+          </div>
+
+          <div className="rounded-lg bg-gradient-to-r from-red-400 to-red-600 p-4 text-white shadow">
+            <h3 className="text-lg">Pending Reviews</h3>
+            <p className="text-2xl font-bold">7</p>
+          </div>
         </div>
-        <div className="flex flex-1 gap-2">
-          {[...new Array(2)].map((i, idx) => (
-            <div
-              key={"second-array-demo-1" + idx}
-              className="h-full w-full animate-pulse rounded-lg bg-gray-100 dark:bg-neutral-800"
-            ></div>
-          ))}
+
+        <div className="mt-6">
+          <h4 className="text-lg font-medium text-black dark:text-white mb-2">
+            Quick Actions
+          </h4>
+          <div className="flex gap-4">
+            <button 
+            onClick={() => router.push("/teacher-classes")}
+            className="rounded bg-orange-500 px-4 py-2 text-white hover:bg-orange-600">
+              Create Class
+            </button>
+            <button className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600">
+              Grade Submissions
+            </button>
+          </div>
         </div>
       </div>
     </div>

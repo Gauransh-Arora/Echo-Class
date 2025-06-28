@@ -61,12 +61,19 @@ export default function StudentClasses() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [classes, setClasses] = useState<ClassType[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [code, setCode] = useState("");
 
-  useEffect(() => {
-    fetchClasses();
-  }, []);
+ useEffect(() => {
+   const accessToken = localStorage.getItem("access");
+    if (!accessToken) {
+      router.push("/login"); // redirect to login if token is missing
+      return;
+    }
+  fetchClasses();
+}, []);
+
 
   const refreshAccessToken = async () => {
     const refreshToken = localStorage.getItem("refresh");
@@ -86,6 +93,7 @@ export default function StudentClasses() {
   };
 
   const fetchClasses = async () => {
+    setLoading(true);
     try {
       const accessToken = localStorage.getItem("access");
       if (!accessToken) throw new Error("No access token");
@@ -108,7 +116,9 @@ export default function StudentClasses() {
         console.error("Fetch error:", err);
         alert("Failed to fetch classes.");
       }
-    }
+    } finally {
+    setLoading(false);
+  }
   };
 
   const handleJoinClass = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -194,7 +204,11 @@ export default function StudentClasses() {
         </div>
 
         <div className="flex flex-wrap gap-6">
-          {classes.length > 0 ? (
+          { loading ? (
+            <div className="text-gray-500 dark:text-gray-400">
+              Loading classes...
+            </div>
+          ) : classes.length > 0 ? (
             classes.map((cls) => (
               <div
                 key={cls.id}
@@ -205,16 +219,20 @@ export default function StudentClasses() {
                   <CardBody className="relative group/card dark:hover:shadow-emerald-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] sm:w-[20rem] rounded-xl p-6 border bg-gray-50">
                     <CardItem
                       translateZ="50"
-                      className="text-lg font-bold text-neutral-700 dark:text-white"
-                    >
-                      {cls.code}
+                      className="text-lg font-bold text-neutral-700 dark:text-white">
+                       {cls.name || cls.code}
                     </CardItem>
+                    <CardItem
+                     as="p"
+                      translateZ="40"
+                      className="text-sm text-neutral-500 mt-1 dark:text-neutral-300">
+                      {cls.description || "Click to view class"}
+                    </CardItem>
+
                     <CardItem
                       as="p"
                       translateZ="60"
-                      className="text-neutral-500 text-sm mt-2 dark:text-neutral-300"
-                    >
-                      Click to view class
+                      className="text-neutral-500 text-sm mt-2 dark:text-neutral-300">
                     </CardItem>
                     <CardItem translateZ="100" className="w-full mt-4">
                       <div
