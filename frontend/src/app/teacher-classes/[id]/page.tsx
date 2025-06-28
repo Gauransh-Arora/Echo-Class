@@ -145,7 +145,7 @@ export default function TeacherParticularClass() {
   return (
     <div
       className={cn(
-        "mx-auto flex w-full flex-1 flex-col rounded-md border border-neutral-200 bg-gray-100 md:flex-row dark:border-neutral-700 dark:bg-neutral-800",
+        "mx-auto flex w-screen flex-1 flex-col rounded-md border border-neutral-200 bg-gray-100 md:flex-row dark:border-neutral-700 dark:bg-black",
         "h-screen"
       )}
     >
@@ -176,7 +176,7 @@ export default function TeacherParticularClass() {
           />
         </SidebarBody>
       </Sidebar>
-      <div className="flex flex-col w-full items-center gap-6 p-4 md:p-8 dark:bg-neutral-800">
+      <div className="flex flex-col w-full items-center gap-6 p-4 md:p-8 dark:bg-neutral-900 rounded-md ">
         {/* Background Card */}
         <div className="relative w-full h-[400px] overflow-hidden rounded-xl shadow-lg border border-neutral-300 dark:border-neutral-700">
           <BackgroundGradientAnimation />
