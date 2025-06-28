@@ -5,7 +5,9 @@ from .views import (
     UploadedMaterialViewSet,
     JoinClassroomView,
     SummaryView,
-    StudentClassroomView, GenerateQuizView
+    StudentClassroomView,
+    GenerateQuizView,
+    ChatbotView
 )
 
 router = DefaultRouter()
@@ -17,4 +19,5 @@ urlpatterns = router.urls + [
     path('summary/<int:pk>/', SummaryView.as_view(),name="summary"),
     path('student-classrooms/', StudentClassroomView.as_view(),name="student-classroom"),
     path("generate-quiz/", GenerateQuizView.as_view(), name="generate-quiz"),
+    path('chatbot/', ChatbotView.as_view(), name="chatbot"),
 ]
