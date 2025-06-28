@@ -90,7 +90,7 @@ class ChatbotView(APIView):
             return Response({"error": "Message is required"}, status=400)
         try:
             # thread_id = str(user_id) + str(doc.uuid())
-            response = pdf_chat(user_message, thread_id)
+            # response = pdf_chat(user_message, thread_id)
             return Response({"response": response})
         except Exception as e:
             return Response({"error": str(e)}, status=500)
