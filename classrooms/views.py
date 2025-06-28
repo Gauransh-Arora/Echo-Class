@@ -17,15 +17,15 @@ import uuid
 
 
 class ClassroomViewSet(viewsets.ModelViewSet):
+    queryset = Classroom.objects.all()  # Add this line
     serializer_class = ClassroomSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Only show classrooms created by the logged-in teacher
+        # This will override the class-level queryset for filtering
         return Classroom.objects.filter(teacher=self.request.user)
 
     def perform_create(self, serializer):
-        # When a teacher creates a classroom, set themselves as the teacher
         serializer.save(teacher=self.request.user)
 
     
@@ -89,7 +89,8 @@ class ChatbotView(APIView):
         if not user_message:
             return Response({"error": "Message is required"}, status=400)
         try:
-            thread_id = str(user_id) 
+            # Get the authenticated user's ID for the thread_id
+            thread_id = str(request.user.id)  # Using user ID as thread identifier
             response = pdf_chat(user_message, thread_id)
             return Response({"response": response})
         except Exception as e:
