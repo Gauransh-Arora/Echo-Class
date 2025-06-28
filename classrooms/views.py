@@ -9,22 +9,25 @@ from ai_layer.extract_and_clean import extract_and_clean
 from ai_layer.chunk_and_summary import chunk_generator, summariser
 from ai_layer.flashcard_and_quiz_generator import generate_flash, generate_quiz
 from ai_layer.embedd_and_upload import embedd_and_upload
-from ai_layer.chatbot_logic import qa_chain
+from ai_layer.chatbot import pdf_chat
 from classrooms.tasks import process_uploaded_material
 import time
 import json
-
+import uuid
 
 
 class ClassroomViewSet(viewsets.ModelViewSet):
-    queryset = Classroom.objects.all()
     serializer_class = ClassroomSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-            pass
+        # Only show classrooms created by the logged-in teacher
+        return Classroom.objects.filter(teacher=self.request.user)
+
     def perform_create(self, serializer):
+        # When a teacher creates a classroom, set themselves as the teacher
         serializer.save(teacher=self.request.user)
+
     
 class StudentClassroomView(APIView):
     permission_classes = [IsAuthenticated]
@@ -64,7 +67,7 @@ class JoinClassroomView(APIView):
             ClassroomMembership.objects.get_or_create(
                 student=request.user, classroom=classroom
             )
-            return Response({"message": "Joined classrooms"})
+            return Response({"message": "Joined classroom"})
         except Classroom.DoesNotExist:
             return Response({"error": "Invalid code"}, status=400)
 
@@ -86,8 +89,8 @@ class ChatbotView(APIView):
         if not user_message:
             return Response({"error": "Message is required"}, status=400)
         try:
-            response = qa_chain.invoke({"question": user_message})
-            time.sleep(1)
+            # thread_id = str(user_id) + str(doc.uuid())
+            response = pdf_chat(user_message, thread_id)
             return Response({"response": response})
         except Exception as e:
             return Response({"error": str(e)}, status=500)
