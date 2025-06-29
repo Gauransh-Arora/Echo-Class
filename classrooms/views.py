@@ -73,13 +73,42 @@ class JoinClassroomView(APIView):
             return Response({"error": "Invalid code"}, status=400)
 
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from classrooms.models import UploadedMaterial
+from ai_layer.chunk_and_summary import chunk_generator, summariser
+
 class SummaryView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, pk):
-        return Response({
-            "summary": "This is a dummy summary.",
-            "quiz": ["Q1", "Q2"],
-            "mindmap": "https://fake-link.com/mindmap.png"
-        })
+        try:
+            material = UploadedMaterial.objects.get(pk=pk)
+        except UploadedMaterial.DoesNotExist:
+            return Response({"error": "Material not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # If summary already exists
+        if material.summary:
+            return Response({"summary": material.summary})
+
+        # Get cleaned text
+        full_text = material.cleaned_text
+        if not full_text:
+            return Response({"error": "No cleaned text available."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Generate summary
+        chunks = chunk_generator(full_text)
+        summary_chunks = summariser(chunks)
+        final_summary = "\n\n".join(summary_chunks)
+
+        # Save summary to database
+        material.summary = final_summary
+        material.save()
+
+        return Response({"summary": final_summary})
+
 
 
 class ChatbotView(APIView):
