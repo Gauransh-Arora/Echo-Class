@@ -103,7 +103,7 @@ class SummaryView(APIView):
         summary_chunks = summariser(chunks)
         final_summary = "\n\n".join(summary_chunks)
 
-        # Save summary to database
+        # Save summary to Database
         material.summary = final_summary
         material.save()
 
