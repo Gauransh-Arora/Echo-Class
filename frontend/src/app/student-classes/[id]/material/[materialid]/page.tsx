@@ -131,7 +131,7 @@ export default function MaterialPage() {
     {
       title: "Summary",
       content: material.summary ? (
-        <div className="text-gray-800 dark:text-gray-200 leading-relaxed">
+        <div className="text-gray-800 dark:text-gray-200 leading-relaxed dark:bg-neutral-800 bg-neutral-100 p-4 rounded-lg">
           {formatSummary(material.summary)}
         </div>
       ) : (
@@ -236,6 +236,18 @@ export default function MaterialPage() {
           <Timeline data={timelineData} />
         </div>
       </main>
+      {/* Mindmap Button */}
+      <button
+        onClick={() =>
+          router.push(
+            `/student-classes/${params.id}/material/${materialId}/mindmap`
+          )
+        }
+        className="fixed bottom-20 right-6 z-50 bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-full shadow-lg"
+      >
+        View Mindmap
+      </button>
+
       {/* Chatbot Button */}
       <button
         onClick={() => setShowChatbot(true)}

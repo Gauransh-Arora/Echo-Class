@@ -133,6 +133,7 @@ export default function StudentParticularClass() {
         <h1 className="text-2xl font-bold text-neutral-800 dark:text-neutral-100">
           Class Materials
         </h1>
+
         {loading ? (
           <p className="text-neutral-500">Loading materials...</p>
         ) : error ? (
@@ -152,6 +153,14 @@ export default function StudentParticularClass() {
           </div>
         )}
       </main>
+
+      {/* Mindmap Button */}
+      <button
+        onClick={() => router.push(`/student-classes/${classId}/mindmap`)}
+        className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-full shadow-lg"
+      >
+        Generate Mindmap
+      </button>
     </div>
   );
 }
