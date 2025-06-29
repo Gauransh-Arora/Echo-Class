@@ -72,8 +72,8 @@ export default function EchoProfilePage() {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <img src="/echo-logo.svg" alt="logo" />
-          <span>echo class</span>
+          <img src="/logo.svg" alt="EchoClass logo" />
+          <span>EchoClass</span>
         </div>
         <nav className="top-actions">
           <img
@@ -107,7 +107,7 @@ export default function EchoProfilePage() {
         <main className="main">
           <div className="cover" />
 
-          <section className="grid">
+          <section className="grid has-cover">
             <div className="card profile">
               <div className="avatar-zone">
                 <img
