@@ -65,15 +65,14 @@ export default function StudentClasses() {
   const [showModal, setShowModal] = useState(false);
   const [code, setCode] = useState("");
 
- useEffect(() => {
-   const accessToken = localStorage.getItem("access");
+  useEffect(() => {
+    const accessToken = localStorage.getItem("access");
     if (!accessToken) {
       router.push("/login"); // redirect to login if token is missing
       return;
     }
-  fetchClasses();
-}, []);
-
+    fetchClasses();
+  }, []);
 
   const refreshAccessToken = async () => {
     const refreshToken = localStorage.getItem("refresh");
@@ -117,8 +116,8 @@ export default function StudentClasses() {
         alert("Failed to fetch classes.");
       }
     } finally {
-    setLoading(false);
-  }
+      setLoading(false);
+    }
   };
 
   const handleJoinClass = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -204,7 +203,7 @@ export default function StudentClasses() {
         </div>
 
         <div className="flex flex-wrap gap-6">
-          { loading ? (
+          {loading ? (
             <div className="text-gray-500 dark:text-gray-400">
               Loading classes...
             </div>
@@ -219,21 +218,23 @@ export default function StudentClasses() {
                   <CardBody className="relative group/card dark:hover:shadow-emerald-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] sm:w-[20rem] rounded-xl p-6 border bg-gray-50">
                     <CardItem
                       translateZ="50"
-                      className="text-lg font-bold text-neutral-700 dark:text-white">
-                       {cls.name || cls.code}
+                      className="text-lg font-bold text-neutral-700 dark:text-white"
+                    >
+                      {cls.name || cls.code}
                     </CardItem>
                     <CardItem
-                     as="p"
+                      as="p"
                       translateZ="40"
-                      className="text-sm text-neutral-500 mt-1 dark:text-neutral-300">
+                      className="text-sm text-neutral-500 mt-1 dark:text-neutral-300"
+                    >
                       {cls.description || "Click to view class"}
                     </CardItem>
 
                     <CardItem
                       as="p"
                       translateZ="60"
-                      className="text-neutral-500 text-sm mt-2 dark:text-neutral-300">
-                    </CardItem>
+                      className="text-neutral-500 text-sm mt-2 dark:text-neutral-300"
+                    ></CardItem>
                     <CardItem translateZ="100" className="w-full mt-4">
                       <div
                         className="h-60 w-full rounded-xl group-hover/card:shadow-xl"
@@ -285,6 +286,7 @@ export default function StudentClasses() {
           </div>
         </div>
       )}
+      {/* Chatbot Floating Button */}
     </div>
   );
 }
@@ -316,10 +318,25 @@ export const LogoIcon = () => (
 
 const getRandomColor = () => {
   const colors = [
-    "#FF5733", "#33FF57", "#3357FF", "#F1C40F", "#E74C3C",
-    "#8E44AD", "#3498DB", "#2ECC71", "#FF33A8", "#FF8C33",
-    "#1ABC9C", "#9B59B6", "#34495E", "#D35400", "#7D3C98",
-    "#16A085", "#27AE60", "#2980B9", "#C0392B",
+    "#FF5733",
+    "#33FF57",
+    "#3357FF",
+    "#F1C40F",
+    "#E74C3C",
+    "#8E44AD",
+    "#3498DB",
+    "#2ECC71",
+    "#FF33A8",
+    "#FF8C33",
+    "#1ABC9C",
+    "#9B59B6",
+    "#34495E",
+    "#D35400",
+    "#7D3C98",
+    "#16A085",
+    "#27AE60",
+    "#2980B9",
+    "#C0392B",
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 };

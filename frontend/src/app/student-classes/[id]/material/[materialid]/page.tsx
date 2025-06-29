@@ -14,6 +14,7 @@ import {
   IconClipboardText,
 } from "@tabler/icons-react";
 import { motion } from "motion/react";
+import ChatbotModal from "@/components/ChatbotModal";
 
 type MaterialType = {
   id: number;
@@ -26,6 +27,7 @@ export default function MaterialPage() {
   const params = useParams();
   const router = useRouter();
   const materialId = params?.materialid; // ✅ FIXED param name
+  const [showChatbot, setShowChatbot] = useState<boolean>(false);
 
   const [material, setMaterial] = useState<MaterialType | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -143,10 +145,7 @@ export default function MaterialPage() {
       content: material.flashcards ? (
         <div className="grid gap-4">
           {JSON.parse(material.flashcards).map(
-            (
-              card: { question: string; answer: string },
-              index: number
-            ) => (
+            (card: { question: string; answer: string }, index: number) => (
               <div
                 key={index}
                 className="rounded-lg bg-neutral-100 p-4 dark:bg-neutral-800"
@@ -237,6 +236,16 @@ export default function MaterialPage() {
           <Timeline data={timelineData} />
         </div>
       </main>
+      {/* Chatbot Button */}
+      <button
+        onClick={() => setShowChatbot(true)}
+        className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-full shadow-lg"
+      >
+        Ask Chatbot
+      </button>
+
+      {/* Chatbot Modal */}
+      {showChatbot && <ChatbotModal onClose={() => setShowChatbot(false)} />}
     </div>
   );
 }
