@@ -41,7 +41,7 @@ export default function Quiz() {
     },
     {
       label: "Profile",
-      href: "#",
+      href: "/profile-page",
       icon: (
         <IconUserBolt className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),

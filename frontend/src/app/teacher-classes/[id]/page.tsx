@@ -32,7 +32,7 @@ export default function TeacherParticularClass() {
     },
     {
       label: "Profile",
-      href: "#",
+      href: "/profile",
       icon: (
         <IconUserBolt className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
@@ -182,7 +182,7 @@ export default function TeacherParticularClass() {
           <BackgroundGradientAnimation />
           <div className="absolute inset-0 z-10 flex items-center justify-center text-white font-bold text-3xl md:text-5xl">
             <p className="bg-clip-text text-transparent drop-shadow-2xl bg-gradient-to-b from-white/80 to-white/20">
-              Welcome User
+              Welcome Teacher
             </p>
           </div>
         </div>
