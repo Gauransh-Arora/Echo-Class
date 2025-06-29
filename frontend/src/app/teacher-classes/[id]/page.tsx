@@ -80,7 +80,7 @@ export default function TeacherParticularClass() {
           }
         );
         console.log("Class Details:", res.data);
-        setClassCode(res.data.code); // <-- ✅ set the class code here
+        setClassCode(res.data.code); 
       } catch (error) {
         console.error("Error fetching class details:", error);
         alert("❌ Failed to fetch class details.");
