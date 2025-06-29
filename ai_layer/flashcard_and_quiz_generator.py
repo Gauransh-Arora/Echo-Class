@@ -6,7 +6,8 @@ import dotenv
 import time
 
 dotenv.load_dotenv("ai_layer/keys.env")
-GROQ_API_KEY = os.getenv("GROQ_SUMM")
+GROQ_API = os.getenv("GROQ_SUMM")
+GROQ_KEY2 = os.getenv("GROQ_PARR")
 
 llm = ChatGroq(
     model="llama-3.1-8b-instant",
@@ -14,6 +15,16 @@ llm = ChatGroq(
     max_tokens=None,
     timeout=None,
     max_retries=2,
+    api_key= GROQ_API
+)
+
+llma = ChatGroq(
+    model="llama-3.1-8b-instant",
+    temperature=0,
+    max_tokens=None,
+    timeout=None,
+    max_retries=2,
+    api_key= GROQ_KEY2
 )
 
 
@@ -225,7 +236,7 @@ def generate_flash(summary : str):
             )
             ]
     )
-    chain = prompt | llm | StrOutputParser()
+    chain = prompt | llma | StrOutputParser()
 
     AIMessage = retry_on_rate_limit(
         chain.invoke,
