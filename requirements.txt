@@ -17,3 +17,6 @@ sentence_transformers==4.1.0
 symspellpy==6.9.0
 django-cors-headers
 google
+protobuf
+googleapis-common-protos
+
