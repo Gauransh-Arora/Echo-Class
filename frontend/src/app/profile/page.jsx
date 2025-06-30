@@ -70,30 +70,7 @@ export default function EchoProfilePage() {
 
   return (
     <div className="app">
-      <header className="topbar">
-        <div className="brand">
-          <img src="/logo.svg" alt="EchoClass logo" />
-          <span>EchoClass</span>
-        </div>
-        <nav className="top-actions">
-          <img
-            src="https://flagcdn.com/us.svg"
-            alt="us"
-            className="flag"
-            width={28}
-          />
-          <IconBtn icon={Grid2x2} />
-          <IconBtn icon={SettingsIcon} />
-          <IconBtn icon={Bell} notification />
-          <div className="avatar-box">
-            <img
-              src="https://avatars.dicebear.com/api/avataaars/user.svg"
-              alt=""
-            />
-            <ChevronDown size={16} />
-          </div>
-        </nav>
-      </header>
+      
 
       <div className="body">
         <aside className="sidebar">
