@@ -11,10 +11,14 @@ from ai_layer.flashcard_and_quiz_generator import generate_flash, generate_quiz
 from ai_layer.embedd_and_upload import embedd_and_upload
 from ai_layer.chatbot import pdf_chat
 from classrooms.tasks import process_uploaded_material
-import time
-import json
-import uuid
 from ai_layer.mindmap import generate_mindmap_from_texts
+import json
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from classrooms.models import UploadedMaterial
+from ai_layer.chunk_and_summary import chunk_generator, summariser
 
 
 class ClassroomViewSet(viewsets.ModelViewSet):
@@ -23,7 +27,6 @@ class ClassroomViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self): 
-        # This will override the class-level queryset for filtering
         return Classroom.objects.filter(teacher=self.request.user)
 
     def perform_create(self, serializer):
@@ -72,13 +75,6 @@ class JoinClassroomView(APIView):
         except Classroom.DoesNotExist:
             return Response({"error": "Invalid code"}, status=400)
 
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from classrooms.models import UploadedMaterial
-from ai_layer.chunk_and_summary import chunk_generator, summariser
 
 class SummaryView(APIView):
     permission_classes = [IsAuthenticated]
