@@ -32,6 +32,8 @@ def process_uploaded_material(material_id):
     
     flashcards, quiz = asyncio.run(generate_study_material(summary_text))
 
+    print("Study Material Generated")
+
     instance.flashcards = flashcards
     instance.quiz = quiz
 
