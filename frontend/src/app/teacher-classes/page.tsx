@@ -63,6 +63,7 @@ export default function ClassesPage() {
   const [classes, setClasses] = useState<ClassType[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [code, setCode] = useState("");
+  const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
     fetchClasses();
@@ -153,6 +154,25 @@ export default function ClassesPage() {
     router.push(`/teacher-classes/${id}`);
   };
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("access");
+        if (!token) return;
+        const res = await axios.get("http://127.0.0.1:8000/api/users/me/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setUsername(res.data.username);
+      } catch (err) {
+        console.error("Error fetching user profile:", err);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   return (
     <div
       className={cn(
@@ -172,7 +192,7 @@ export default function ClassesPage() {
           </div>
           <SidebarLink
             link={{
-              label: "Manu Arora",
+              label: username ?? "Loading...",
               href: "#",
               icon: (
                 <img
@@ -287,7 +307,7 @@ export const Logo = () => (
       animate={{ opacity: 1 }}
       className="font-medium whitespace-pre text-black dark:text-white"
     >
-      Acet Labs
+      Side Panel
     </motion.span>
   </a>
 );
@@ -295,7 +315,8 @@ export const Logo = () => (
 export const LogoIcon = () => (
   <a
     href="#"
-    className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black">
+    className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black"
+  >
     <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-black dark:bg-white" />
   </a>
 );
@@ -324,4 +345,3 @@ const getRandomColor = () => {
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 };
-
