@@ -22,7 +22,7 @@ class ClassroomViewSet(viewsets.ModelViewSet):
     serializer_class = ClassroomSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
+    def get_queryset(self): 
         # This will override the class-level queryset for filtering
         return Classroom.objects.filter(teacher=self.request.user)
 
