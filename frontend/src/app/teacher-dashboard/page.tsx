@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import {
   IconArrowLeft,
@@ -10,16 +11,18 @@ import {
 } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 import { label } from "motion/react-client";
+import axios from "axios";
 
 export default function TeacherDashboard() {
-  const [open, setOpen] = useState(true); 
-  const router = useRouter(); 
+  const [open, setOpen] = useState(true);
+  const router = useRouter();
+  const [username, setUsername] = useState<string | null>(null);
 
   const handleLogout = () => {
     console.log("Teacher logging out...");
-    router.push("/login"); 
+    router.push("/login");
   };
 
   const links = [
@@ -56,12 +59,31 @@ export default function TeacherDashboard() {
       href: "#",
       icon: (
         <IconArrowLeft
-          onClick={handleLogout} 
+          onClick={handleLogout}
           className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200 cursor-pointer"
         />
       ),
     },
   ];
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("access");
+        if (!token) return;
+        const res = await axios.get("http://127.0.0.1:8000/api/users/me/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setUsername(res.data.username);
+      } catch (err) {
+        console.error("Error fetching user profile:", err);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   return (
     <div
@@ -91,7 +113,7 @@ export default function TeacherDashboard() {
           <div>
             <SidebarLink
               link={{
-                label: "Manu Arora",
+                label: username ?? "Loading...",
                 href: "#",
                 icon: (
                   <img
@@ -126,7 +148,7 @@ export const Logo = () => {
         animate={{ opacity: 1 }}
         className="font-medium whitespace-pre text-black dark:text-white"
       >
-        Acet Labs
+        Side Panel
       </motion.span>
     </a>
   );
@@ -142,7 +164,6 @@ export const LogoIcon = () => {
     </a>
   );
 };
-
 
 const Dashboard = () => {
   const router = useRouter();
@@ -170,9 +191,10 @@ const Dashboard = () => {
             Quick Actions
           </h4>
           <div className="flex gap-4">
-            <button 
-            onClick={() => router.push("/teacher-classes")}
-            className="rounded bg-orange-500 px-4 py-2 text-white hover:bg-orange-600">
+            <button
+              onClick={() => router.push("/teacher-classes")}
+              className="rounded bg-orange-500 px-4 py-2 text-white hover:bg-orange-600"
+            >
               Create Class
             </button>
             <button className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600">

@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 type Material = {
   id: number;
   file: string;
+  title: string; // ✅ Added
   uploaded_at: string;
 };
 
@@ -29,6 +30,7 @@ export default function StudentParticularClass() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<boolean>(false);
+  const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
     if (!classId) return;
@@ -95,6 +97,25 @@ export default function StudentParticularClass() {
     },
   ];
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("access");
+        if (!token) return;
+        const res = await axios.get("http://127.0.0.1:8000/api/users/me/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setUsername(res.data.username);
+      } catch (err) {
+        console.error("Error fetching user profile:", err);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   return (
     <div
       className={cn(
@@ -115,12 +136,14 @@ export default function StudentParticularClass() {
           </div>
           <SidebarLink
             link={{
-              label: "Student Name",
+              label: username ?? "Loading...",
               href: "#",
               icon: (
                 <img
                   src="https://assets.aceternity.com/manu.png"
                   className="h-7 w-7 shrink-0 rounded-full"
+                  width={50}
+                  height={50}
                   alt="Avatar"
                 />
               ),
@@ -190,8 +213,8 @@ const MaterialCard = ({
         <span className="text-white text-lg">📄</span>
       </div>
       <div className="flex flex-col overflow-hidden">
-        <figcaption className="flex flex-row items-center whitespace-pre text-lg font-medium dark:text-white">
-          <span className="text-sm sm:text-lg truncate">{material.file}</span>
+        <figcaption className="flex flex-row items-center whitespace-pre text-lg font-semibold dark:text-white">
+          <span className="truncate">{material.title}</span>
         </figcaption>
         <p className="text-sm font-normal text-gray-500 dark:text-white/60">
           Uploaded on {new Date(material.uploaded_at).toLocaleDateString()}
@@ -212,7 +235,7 @@ export const Logo = () => (
       animate={{ opacity: 1 }}
       className="font-medium whitespace-pre text-black dark:text-white"
     >
-      Acet Labs
+      Side Panel
     </motion.span>
   </a>
 );

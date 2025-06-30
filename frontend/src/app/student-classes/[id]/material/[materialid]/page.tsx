@@ -28,11 +28,11 @@ export default function MaterialPage() {
   const router = useRouter();
   const materialId = params?.materialid; // ✅ FIXED param name
   const [showChatbot, setShowChatbot] = useState<boolean>(false);
-
   const [material, setMaterial] = useState<MaterialType | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<boolean>(false);
+  const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
     if (!materialId) return;
@@ -60,6 +60,25 @@ export default function MaterialPage() {
 
     fetchMaterial();
   }, [materialId]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("access");
+        if (!token) return;
+        const res = await axios.get("http://127.0.0.1:8000/api/users/me/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setUsername(res.data.username);
+      } catch (err) {
+        console.error("Error fetching user profile:", err);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   const formatSummary = (text: string | null) => {
     if (!text) return null;
@@ -111,87 +130,73 @@ export default function MaterialPage() {
     },
   ];
 
-  if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <p className="text-lg">Loading...</p>
-      </div>
-    );
-  }
-
-  if (error || !material) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <p className="text-lg text-red-500">{error ?? "Material not found."}</p>
-      </div>
-    );
-  }
-
-  const timelineData = [
-    {
-      title: "Summary",
-      content: material.summary ? (
-        <div className="text-gray-800 dark:text-gray-200 leading-relaxed dark:bg-neutral-800 bg-neutral-100 p-4 rounded-lg">
-          {formatSummary(material.summary)}
-        </div>
-      ) : (
-        <p className="text-gray-500 italic">
-          Processing... Summary not available yet.
-        </p>
-      ),
-    },
-    {
-      title: "Flashcards",
-      content: material.flashcards ? (
-        <div className="grid gap-4">
-          {JSON.parse(material.flashcards).map(
-            (card: { question: string; answer: string }, index: number) => (
-              <div
-                key={index}
-                className="rounded-lg bg-neutral-100 p-4 dark:bg-neutral-800"
+  const timelineData = material
+    ? [
+        {
+          title: "Summary",
+          content: material.summary ? (
+            <div className="text-gray-800 dark:text-gray-200 leading-relaxed dark:bg-neutral-800 bg-neutral-100 p-4 rounded-lg">
+              {formatSummary(material.summary)}
+            </div>
+          ) : (
+            <p className="text-gray-500 italic">
+              Processing... Summary not available yet.
+            </p>
+          ),
+        },
+        {
+          title: "Flashcards",
+          content: material.flashcards ? (
+            <div className="grid gap-4">
+              {JSON.parse(material.flashcards).map(
+                (card: { question: string; answer: string }, index: number) => (
+                  <div
+                    key={index}
+                    className="rounded-lg bg-neutral-100 p-4 dark:bg-neutral-800"
+                  >
+                    <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                      Q: {card.question}
+                    </p>
+                    <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
+                      A: {card.answer}
+                    </p>
+                  </div>
+                )
+              )}
+            </div>
+          ) : (
+            <p className="text-gray-500 italic">
+              Processing... Flashcards not available yet.
+            </p>
+          ),
+        },
+        {
+          title: "Download & Quiz",
+          content: (
+            <div className="flex flex-col gap-4">
+              <a
+                href={material.file}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow items-center justify-center"
               >
-                <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                  Q: {card.question}
-                </p>
-                <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
-                  A: {card.answer}
-                </p>
-              </div>
-            )
-          )}
-        </div>
-      ) : (
-        <p className="text-gray-500 italic">
-          Processing... Flashcards not available yet.
-        </p>
-      ),
-    },
-    {
-      title: "Download & Quiz",
-      content: (
-        <div className="flex flex-col gap-4">
-          <a
-            href={material.file}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow items-center justify-center"
-          >
-            Download PDF
-          </a>
-          <button
-            onClick={() =>
-              router.push(
-                `/student-classes/${params.id}/material/${materialId}/quiz`
-              )
-            }
-            className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-4 py-2 rounded shadow"
-          >
-            Take Quiz
-          </button>
-        </div>
-      ),
-    },
-  ];
+                Download PDF
+              </a>
+              <button
+                onClick={() =>
+                  router.push(
+                    `/student-classes/${params.id}/material/${materialId}/quiz`
+                  )
+                }
+                className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-4 py-2 rounded shadow"
+              >
+                Take Quiz
+              </button>
+            </div>
+          ),
+        },
+      ]
+    : [];
 
   return (
     <div
@@ -213,7 +218,7 @@ export default function MaterialPage() {
           </div>
           <SidebarLink
             link={{
-              label: "Student Name",
+              label: username ?? "Loading...",
               href: "#",
               icon: (
                 <img
@@ -227,34 +232,49 @@ export default function MaterialPage() {
         </SidebarBody>
       </Sidebar>
 
-      {/* Timeline */}
+      {/* Main Content */}
       <main className="flex flex-1 flex-col overflow-y-auto p-6 md:p-10">
-        <h1 className="mb-6 text-2xl font-bold text-neutral-800 dark:text-neutral-100">
-          Material Details
-        </h1>
-        <div className="relative w-full overflow-clip">
-          <Timeline data={timelineData} />
-        </div>
-      </main>
-      {/* Mindmap Button */}
-      <button
-        onClick={() =>
-          router.push(
-            `/student-classes/${params.id}/material/${materialId}/mindmap`
-          )
-        }
-        className="fixed bottom-20 right-6 z-50 bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-full shadow-lg"
-      >
-        View Mindmap
-      </button>
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <p className="text-lg">Loading...</p>
+          </div>
+        ) : error || !material ? (
+          <div className="flex-1 flex items-center justify-center">
+            <p className="text-lg text-red-500">
+              {error ?? "Material not found."}
+            </p>
+          </div>
+        ) : (
+          <>
+            <h1 className="mb-6 text-2xl font-bold text-neutral-800 dark:text-neutral-100">
+              Material Details
+            </h1>
+            <div className="relative w-full overflow-clip">
+              <Timeline data={timelineData} />
+            </div>
 
-      {/* Chatbot Button */}
-      <button
-        onClick={() => setShowChatbot(true)}
-        className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-full shadow-lg"
-      >
-        Ask Chatbot
-      </button>
+            {/* Mindmap Button */}
+            <button
+              onClick={() =>
+                router.push(
+                  `/student-classes/${params.id}/material/${materialId}/mindmap`
+                )
+              }
+              className="fixed bottom-20 right-6 z-50 bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-full shadow-lg"
+            >
+              View Mindmap
+            </button>
+
+            {/* Chatbot Button */}
+            <button
+              onClick={() => setShowChatbot(true)}
+              className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-full shadow-lg"
+            >
+              Ask Chatbot
+            </button>
+          </>
+        )}
+      </main>
 
       {/* Chatbot Modal */}
       {showChatbot && <ChatbotModal onClose={() => setShowChatbot(false)} />}
@@ -273,7 +293,7 @@ export const Logo = () => (
       animate={{ opacity: 1 }}
       className="font-medium whitespace-pre text-black dark:text-white"
     >
-      Acet Labs
+      Side Panel
     </motion.span>
   </a>
 );

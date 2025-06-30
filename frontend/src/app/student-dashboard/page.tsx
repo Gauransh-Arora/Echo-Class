@@ -11,6 +11,7 @@ import {
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function StudentDashboard() {
   const [open, setOpen] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [code, setCode] = useState("");
+  const [username, setUsername] = useState<string | null>(null);
 
   const handleLogout = () => {
     console.log("Logging out...");
@@ -89,6 +91,25 @@ export default function StudentDashboard() {
     },
   ];
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("access");
+        if (!token) return;
+        const res = await axios.get("http://127.0.0.1:8000/api/users/me/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setUsername(res.data.username);
+      } catch (err) {
+        console.error("Error fetching user profile:", err);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   return (
     <div
       className={cn(
@@ -118,7 +139,7 @@ export default function StudentDashboard() {
           <div>
             <SidebarLink
               link={{
-                label: "Manu Arora",
+                label: username ?? "Loading...",
                 href: "#",
                 icon: (
                   <img
@@ -165,7 +186,11 @@ export default function StudentDashboard() {
               >
                 Join Class
               </button>
-              <a href="\timetable.jpg" target="_blank" rel="noopener noreferrer">
+              <a
+                href="\timetable.jpg"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <button className="rounded bg-purple-500 px-4 py-2 text-white hover:bg-purple-600">
                   View Timetable
                 </button>
@@ -224,7 +249,7 @@ export const Logo = () => {
         animate={{ opacity: 1 }}
         className="font-medium whitespace-pre text-black dark:text-white"
       >
-        Acet Labs
+        Side Panel
       </motion.span>
     </a>
   );

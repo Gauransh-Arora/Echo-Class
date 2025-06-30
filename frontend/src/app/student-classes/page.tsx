@@ -64,6 +64,7 @@ export default function StudentClasses() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [code, setCode] = useState("");
+  const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
     const accessToken = localStorage.getItem("access");
@@ -157,6 +158,25 @@ export default function StudentClasses() {
     router.push(`/student-classes/${id}`);
   };
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("access");
+        if (!token) return;
+        const res = await axios.get("http://127.0.0.1:8000/api/users/me/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setUsername(res.data.username);
+      } catch (err) {
+        console.error("Error fetching user profile:", err);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   return (
     <div
       className={cn(
@@ -176,7 +196,7 @@ export default function StudentClasses() {
           </div>
           <SidebarLink
             link={{
-              label: "Manu Arora",
+              label: username ?? "Loading...",
               href: "#",
               icon: (
                 <img
@@ -302,7 +322,7 @@ export const Logo = () => (
       animate={{ opacity: 1 }}
       className="font-medium whitespace-pre text-black dark:text-white"
     >
-      Acet Labs
+      Side Panel
     </motion.span>
   </a>
 );

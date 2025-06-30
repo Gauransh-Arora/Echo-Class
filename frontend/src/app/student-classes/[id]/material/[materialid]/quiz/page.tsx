@@ -24,6 +24,8 @@ type QuestionType = {
 export default function Quiz() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const [username, setUsername] = useState<string | null>(null);
+
   const links = [
     {
       label: "Dashboard",
@@ -62,6 +64,25 @@ export default function Quiz() {
     },
   ];
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("access");
+        if (!token) return;
+        const res = await axios.get("http://127.0.0.1:8000/api/users/me/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setUsername(res.data.username);
+      } catch (err) {
+        console.error("Error fetching user profile:", err);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   return (
     <div
       className={cn(
@@ -81,7 +102,7 @@ export default function Quiz() {
           </div>
           <SidebarLink
             link={{
-              label: "Manu Arora",
+              label: username ?? "Loading...",
               href: "#",
               icon: (
                 <img
@@ -99,21 +120,23 @@ export default function Quiz() {
   );
 }
 
-export const Logo = () => (
-  <a
-    href="#"
-    className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black"
-  >
-    <div className="h-5 w-6 shrink-0 rounded bg-black dark:bg-white" />
-    <motion.span
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="font-medium whitespace-pre text-black dark:text-white"
+export const Logo = () => {
+  return (
+    <a
+      href="#"
+      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black"
     >
-      Acet Labs
-    </motion.span>
-  </a>
-);
+      <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-black dark:bg-white" />
+      <motion.span
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="font-medium whitespace-pre text-black dark:text-white"
+      >
+        Side Panel
+      </motion.span>
+    </a>
+  );
+};
 
 export const LogoIcon = () => (
   <a
