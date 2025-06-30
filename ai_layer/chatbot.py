@@ -110,14 +110,17 @@ def format_history(messages: list, max_chars: int = 4000) -> str:
 def chatbot_node(state: dict) -> dict:
     messages = state["messages"]
 
-    user_msg = correct_query(get_contextual_query(messages))
-
-    history = format_history(messages[:-1], max_chars=4000)
-    docs = search_for_data(user_msg)
+    # Use contextual query for DB search
+    contextual_query = correct_query(get_contextual_query(messages))
+    docs = search_for_data(contextual_query)
     context = format_retrival(docs, max_chars=1500)
+
+    # Use only the latest user message for the LLM
+    latest_user_msg = next((m.content for m in reversed(messages) if isinstance(m, HumanMessage)), "")
+    history = format_history(messages[:-1], max_chars=4000)
     
     prompt_text = prompt.format(
-        question=user_msg,
+        question=latest_user_msg,
         context=context,
         history=history
     )
