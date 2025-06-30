@@ -26,6 +26,7 @@ class ClassroomMembership(models.Model):
 class UploadedMaterial(models.Model):
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
     file = models.FileField(upload_to='materials/')
+    title = models.TextField(blank=False, null= False)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     cleaned_text = models.TextField(blank=True, null=True)
